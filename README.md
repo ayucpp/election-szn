@@ -4,6 +4,12 @@
 
 A high-fidelity quantitative research project applying signal processing techniques to financial time-series data during Indian Lok Sabha elections (2019 & 2024).
 
+### Team Members
+- Ayush Raj — TCR24CS018
+- Jerome Parekkattil — TCR24CS037
+- Royce Pathayil Saji — TCR24CS058
+- Sidharth V Jain — TCR24CS063
+
 This repository contains both the **underlying CNN predictive model** (trained on Nifty 50 1-min data) and the **"ElectionSZN" static dashboard** used to visualize its findings.
 
 ---
