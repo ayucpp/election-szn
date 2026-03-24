@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ELECTION SZN — Predicting Market Direction During LokSabha Elections</title>
+  <meta name="description"
+    content="CNN-based market intelligence dashboard for Nifty 50 during Lok Sabha elections. R²=0.81, 87.5% direction accuracy.">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="js/data.js"></script>
+</head>
+
+<body>
+
+  <!-- ── TOOLTIP ──────────────────────────────────────────── -->
+  <div id="tooltip"></div>
+
+  <!-- ── STATUS BAR ──────────────────────────────────────── -->
+  <div id="status-bar">
+    <div id="bar-left">
+      <div class="live-dot" id="mkt-dot"></div>
+      <span id="mkt-status" style="font-size:10px;font-weight:600;letter-spacing:.08em">NSE MARKET</span>
+      <span id="clock" style="color:#444466;font-size:10px">00:00:00 IST</span>
+      <span style="color:#2a2a2e;font-size:9px">|&nbsp; NIFTY 50 · 2015–2026 · 1-MIN</span>
+    </div>
+    <div id="ticker-wrap">
+      <div class="ticker-inner">
+        <span class="ticker-item">// <span>ELECTION SZN INDEX &uarr; R² = 0.8081</span></span>
+        <span class="ticker-item">// <span>2024 RESULT DAY: NIFTY −6% IN 3 HOURS &middot; VIX +62%</span></span>
+        <span class="ticker-item">// <span>MODEL DIR. ACCURACY: 87.5% ELECTIONS vs 53% NORMAL</span></span>
+        <span class="ticker-item">// <span>2019 BJP MAJORITY → NIFTY +3.8% NEXT 5 DAYS</span></span>
+        <span class="ticker-item">// <span>HUNG PARLIAMENT 2024 → VIX SPIKE TO 26</span></span>
+        <span class="ticker-item">// <span>CNN TRAINED ON 10 YEARS OF 1-MIN NIFTY 50 DATA</span></span>
+        <span class="ticker-item">// <span>RMSE = ₹434.66 &middot; MAPE = 1.40% &middot; ASSIGNMENT 2</span></span>
+        <span class="ticker-item">// <span>ELECTION SZN INDEX &uarr; R² = 0.8081</span></span>
+        <span class="ticker-item">// <span>2024 RESULT DAY: NIFTY −6% IN 3 HOURS &middot; VIX +62%</span></span>
+        <span class="ticker-item">// <span>MODEL DIR. ACCURACY: 87.5% ELECTIONS vs 53% NORMAL</span></span>
+        <span class="ticker-item">// <span>2019 BJP MAJORITY → NIFTY +3.8% NEXT 5 DAYS</span></span>
+        <span class="ticker-item">// <span>HUNG PARLIAMENT 2024 → VIX SPIKE TO 26</span></span>
+        <span class="ticker-item">// <span>CNN TRAINED ON 10 YEARS OF 1-MIN NIFTY 50 DATA</span></span>
+        <span class="ticker-item">// <span>RMSE = ₹434.66 &middot; MAPE = 1.40% &middot; ASSIGNMENT 2</span></span>
+      </div>
+    </div>
+    <div id="bar-right">
+      <span style="color:#444466;font-size:9px">8 ELECTION PHASES MONITORED</span>
+      <button id="arch-btn" class="badge badge-dim"
+        style="cursor:pointer;border:none;font-family:inherit;letter-spacing:.08em"
+        title="View CNN Architecture">ElectionSZN_CNN v2 ▸</button>
+    </div>
+  </div>
+
+  <!-- ── MAIN WRAP ─────────────────────────────────────────── -->
+  <div id="main-wrap">
+
+    <!-- ── HERO ──────────────────────────────────────────── -->
+    <section id="hero">
+      <div id="hero-left">
+        <div id="hero-title">ELECTION<br>SZN</div>
+        <div id="hero-sub"></div>
+        <div id="hero-tag">Democracy has a frequency. We built a spectrogram to read it.</div>
+        <div class="hero-pills">
+          <div class="stat-pill cyan"
+            data-tip="R² = 0.8081||The model explains 81% of Nifty 50 price variance||A strong model scores above 0.7. Ours is 0.81.">
+            <div class="pill-label">MODEL R²</div>
+            <div class="pill-val" style="color:var(--cyan)">0.8081</div>
+            <div class="pill-desc">Explains 81% of price variance</div>
+          </div>
+          <div class="stat-pill amber"
+            data-tip="Election Direction Accuracy: 87.5%||The model correctly predicts up/down 87.5% of the time during elections||vs 53% in normal markets — nearly as good as a coin flip">
+            <div class="pill-label">ELECTION DIR. ACC.</div>
+            <div class="pill-val" style="color:var(--amber)">87.5%</div>
+            <div class="pill-desc">Correct up/down during elections</div>
+          </div>
+        </div>
+        <div id="hero-story">
+          Every 5 years, 970 million voters decide India's government.<br>
+          Markets don't just react to results — they react to polls,<br>
+          alliances, and counting day in a measurable frequency pattern.<br>
+          This dashboard shows that signal.
+        </div>
+        <!-- Headline stat -->
+        <div
+          style="margin-top:20px;padding:14px 16px;background:#0a0a0f;border:1px solid var(--amber);border-radius:6px">
+          <div style="font-size:9px;color:var(--dim);letter-spacing:.14em;margin-bottom:6px">THE HEADLINE FINDING</div>
+          <div style="font-size:12px;color:var(--text);line-height:1.7">
+            The model is <span style="color:var(--amber);font-weight:700">65% more accurate</span> at predicting market
+            direction during elections than in normal periods.
+            <span style="color:var(--muted)"> Elections leave a detectable signal in the market's frequency
+              spectrum.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- GAUGE -->
+      <div id="gauge-wrap">
+        <div style="font-size:9px;color:var(--dim);letter-spacing:.16em;text-transform:uppercase;margin-bottom:4px">
+          VOLATILITY DOOMSDAY CLOCK</div>
+        <svg id="gauge-svg" role="img" aria-label="Volatility gauge"></svg>
+        <div id="gauge-label" style="font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase">
+        </div>
+        <div style="font-size:9px;color:var(--dim);margin-top:6px;text-align:center;max-width:280px"
+          data-tip="Annualised volatility||Above 25% = markets are scared||June 4, 2024: Nifty VIX hit 26. Annualised vol reached 41%.">
+          Hover for explanation · Switch tabs to animate needle
+        </div>
+      </div>
+    </section>
+
+    <!-- ── CYCLE TABS ─────────────────────────────────────── -->
+    <div id="tabs">
+      <button class="tab-btn active-2019" data-cycle="2019">🗳️ &nbsp;2019 LOK SABHA — BJP SUPERMAJORITY</button>
+      <button class="tab-btn" data-cycle="2024">🗳️ &nbsp;2024 LOK SABHA — HUNG PARLIAMENT</button>
+    </div>
+
+    <!-- shared 3-col layout rendered once, charts update on tab switch -->
+    <div id="dashboard-cols">
+
+      <!-- LEFT: INTEL FEED -->
+      <div class="panel glow-cyan" style="padding:0;overflow:hidden">
+        <div style="padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px">
+          <div class="live-dot"></div>
+          <span class="panel-title">🛰 INTEL FEED</span>
+          <span class="badge badge-dim" style="margin-left:auto;font-size:8px">25 SIGNALS</span>
+        </div>
+        <div
+          style="font-size:9px;color:var(--dim);padding:6px 14px;border-bottom:1px solid var(--border);letter-spacing:.08em">
+          MONITORING TWITTER/X SENTIMENT</div>
+        <div id="feed-wrap">
+          <div id="feed-inner"></div>
+        </div>
+      </div>
+
+      <!-- CENTER -->
+      <div id="center-col">
+
+        <!-- Price chart -->
+        <div class="panel glow-cyan">
+          <div class="panel-label">
+            <span>POLYPULSE SEISMOGRAPH</span>
+            <span class="badge badge-cyan" style="font-size:8px">ACTUAL vs PREDICTED</span>
+          </div>
+          <div class="chart-wrap" style="height:220px"><canvas id="price-chart"></canvas></div>
+          <div class="chart-wrap" style="height:80px;margin-top:8px"><canvas id="return-chart"></canvas></div>
+        </div>
+
+        <!-- Spectrogram -->
+        <div class="panel glow-amber">
+          <div class="panel-label">
+            <span>SPECTRAL MONITOR — STFT S(t,f)</span>
+            <div class="spec-toggles" style="margin-left:auto;margin-bottom:0">
+              <button class="spec-btn" data-spec="normal">NORMAL 2017</button>
+              <button class="spec-btn active" data-spec="2019">2019 ELECTION</button>
+              <button class="spec-btn" data-spec="2024">2024 ELECTION</button>
+            </div>
+          </div>
+          <canvas id="spec-canvas" class="spec-canvas" width="700" height="180"></canvas>
+          <div style="font-size:9px;color:var(--dim);margin-top:6px;line-height:1.6">
+            X-axis: time relative to result day &nbsp;|&nbsp; Y-axis: frequency band &nbsp;|&nbsp; Color: blue=low
+            energy → amber → white=extreme energy &nbsp;|&nbsp; <span style="color:var(--red)">— dashed line = result
+              day</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT -->
+      <div id="right-col">
+
+        <!-- Sector donut -->
+        <div class="panel">
+          <div class="panel-label">NIFTY 50 — SECTOR EXPOSURE</div>
+          <div style="height:180px"><canvas id="donut-chart"></canvas></div>
+          <div id="sector-deltas" style="margin-top:10px"></div>
+        </div>
+
+        <!-- Phase table -->
+        <div class="panel">
+          <div class="panel-label">PHASE BREAKDOWN</div>
+          <table class="phase-table">
+            <thead>
+              <tr>
+                <th>PHASE</th>
+                <th>DAYS</th>
+                <th>VOL</th>
+                <th>ACC</th>
+              </tr>
+            </thead>
+            <tbody id="phase-tbody"></tbody>
+          </table>
+        </div>
+
+        <!-- Signal -->
+        <div class="panel glow-amber">
+          <div class="panel-label">CURRENT SIGNAL</div>
+          <div id="signal-pill" class="signal-pill signal-neut">~ NEUTRAL</div>
+          <div id="signal-desc" style="font-size:10px;color:var(--muted);text-align:center;margin-bottom:8px"></div>
+          <div style="font-size:9px;color:var(--dim);line-height:1.6;text-align:center"
+            data-tip="Research demonstration only||This is not financial advice||Based on spectrogram pattern similarity from the test set">
+            Based on last test-set prediction. Research demo only.
+          </div>
+        </div>
+
+        <!-- Key metrics -->
+        <div class="panel">
+          <div class="panel-label">KEY METRICS</div>
+          <div
+            data-tip="RMSE = ₹434.66||On average, predictions are off by ₹435||On a ~₹25,000 index that's just 1.7% error"
+            class="param-row"><span class="param-key">RMSE</span><span class="param-val">₹434.66</span></div>
+          <div
+            data-tip="MAPE = 1.40%||Average prediction error is just 1.4% of the actual price||Financial models above 5% MAPE are considered unreliable"
+            class="param-row"><span class="param-key">MAPE</span><span class="param-val">1.40%</span></div>
+          <div
+            data-tip="MAE = ₹340.73||The average absolute error in rupee terms||Smaller than RMSE means large errors are rare"
+            class="param-row"><span class="param-key">MAE</span><span class="param-val">₹340.73</span></div>
+          <div
+            data-tip="R² = 0.8081||81% of price variance explained by the model||Values near 1.0 are perfect; above 0.7 is strong"
+            class="param-row"><span class="param-key">R²</span><span class="param-val"
+              style="color:var(--green)">0.8081</span></div>
+          <div
+            data-tip="Normal dir. accuracy = 53.1%||Barely better than a coin flip in normal markets||This is exactly what we expect — no exploitable signal"
+            class="param-row"><span class="param-key">NORMAL DIR.</span><span class="param-val"
+              style="color:var(--muted)">53.1%</span></div>
+          <div
+            data-tip="Election dir. accuracy = 87.5%||The model is right 87.5% of the time about market direction during elections||This validates the Election SZN hypothesis"
+            class="param-row"><span class="param-key">ELEC DIR.</span><span class="param-val"
+              style="color:var(--amber)">87.5%</span></div>
+        </div>
+      </div>
+    </div><!-- end dashboard-cols -->
+
+    <!-- ── PREDICTION REPLAY ────────────────────────────── -->
+    <section class="section-full">
+      <div class="section-head">🎬 PREDICTION REPLAY</div>
+      <div class="section-sub">Drag the timeline to see what the model predicted vs what actually happened</div>
+      <div id="replay-controls">
+        <button class="replay-btn" id="replay-play">▶ AUTO-PLAY</button>
+        <input type="range" id="replay-scrubber" min="0" max="499" value="0" style="flex:1;accent-color:var(--cyan)">
+        <span id="accuracy-label" style="font-size:10px;color:var(--muted);white-space:nowrap"></span>
+      </div>
+      <div style="position:relative">
+        <div style="height:280px"><canvas id="replay-chart"></canvas></div>
+        <div id="replay-card" style="top:10px;right:10px"></div>
+      </div>
+      <div id="accuracy-bar-wrap">
+        <div id="accuracy-bar-fill"></div>
+      </div>
+    </section>
+
+    <!-- ── WHAT THE MODEL SAW ───────────────────────────── -->
+    <section class="section-full">
+      <div class="section-head">🧠 WHAT THE MODEL SAW</div>
+      <div class="section-sub">The CNN doesn't see price charts. It sees this — STFT spectrograms of log-return time
+        series.</div>
+      <div class="spec-cards">
+        <div class="spec-card">
+          <canvas id="spec-card-normal" width="400" height="160" class="spec-canvas"></canvas>
+          <div class="spec-card-body">
+            <div class="spec-card-label">NORMAL PERIOD (2017)</div>
+            <div class="spec-card-desc">Calm, regular pattern. Low-frequency energy dominates. Model sees routine market
+              noise — no election premium.</div>
+            <button class="deep-scan-btn">🔬 DEEP SCAN — VIEW FFT SPECTRUM</button>
+          </div>
+        </div>
+        <div class="spec-card">
+          <canvas id="spec-card-2019" width="400" height="160" class="spec-canvas"></canvas>
+          <div class="spec-card-body">
+            <div class="spec-card-label">2019 ELECTION</div>
+            <div class="spec-card-desc">Low-frequency energy dominant. Strong trend band. Models sees an orderly,
+              sustained institutional rally signal.</div>
+            <button class="deep-scan-btn">🔬 DEEP SCAN — VIEW FFT SPECTRUM</button>
+          </div>
+        </div>
+        <div class="spec-card">
+          <canvas id="spec-card-2024" width="400" height="160" class="spec-canvas"></canvas>
+          <div class="spec-card-body">
+            <div class="spec-card-label">2024 ELECTION</div>
+            <div class="spec-card-desc">High-frequency bursts. Multiple bands active. Model detected the uncertainty
+              signature 2 days before result day.</div>
+            <button class="deep-scan-btn">🔬 DEEP SCAN — VIEW FFT SPECTRUM</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── POLITICAL BETA ────────────────────────────────── -->
+    <section class="section-full">
+      <div class="section-head">🏛️ POLITICAL BETA — HOW ELECTIONS MOVE SECTORS</div>
+      <div class="section-sub">Which parts of Nifty 50 feel election results the most?</div>
+      <div class="beta-toggles">
+        <button class="beta-toggle active-2019" data-mode="2019">2019</button>
+        <button class="beta-toggle" data-mode="2024">2024</button>
+        <button class="beta-toggle" data-mode="cmp">COMPARE</button>
+      </div>
+      <table class="beta-table">
+        <thead>
+          <tr>
+            <th>SECTOR</th>
+            <th
+              data-tip="Pre-election phase||60 days before first voting phase begins||Institutions hedge — volatility rises">
+              PRE-ELECTION</th>
+            <th
+              data-tip="Result day||Counting day — maximum market sensitivity||Single day with highest volatility of entire cycle">
+              RESULT DAY</th>
+            <th data-tip="Post-election phase||30 days after result day||New government policy premium being priced in">
+              POST-ELECTION</th>
+          </tr>
+        </thead>
+        <tbody id="beta-tbody"></tbody>
+      </table>
+    </section>
+
+    <!-- ── MODEL PARAMETERS ──────────────────────────────── -->
+    <section class="section-full">
+      <button id="params-toggle">⚙️ MODEL PARAMETERS <span>▼</span></button>
+      <div id="params-body">
+        <div>
+          <div class="panel-label" style="margin-bottom:10px">ARCHITECTURE</div>
+          <div class="param-row"
+            data-tip="Input shape: (16, 125, 2)||16 frequency bins × 125 time steps × 2 channels||Channel 1: STFT power; Channel 2: election binary mask">
+            <span class="param-key">Input shape</span><span class="param-val">(16, 125, 2)</span>
+          </div>
+          <div class="param-row"
+            data-tip="Conv2D Block 1||32 filters, 3×3 kernel, ReLU activation||Detects simple low-level frequency patterns">
+            <span class="param-key">Conv2D ①</span><span class="param-val">32f · 3×3 · ReLU · BN · MaxPool</span>
+          </div>
+          <div class="param-row"
+            data-tip="Conv2D Block 2||64 filters — double the complexity||Detects combinations of the simple patterns from Block 1">
+            <span class="param-key">Conv2D ②</span><span class="param-val">64f · 3×3 · ReLU · BN · MaxPool</span>
+          </div>
+          <div class="param-row"
+            data-tip="Conv2D Block 3||128 filters, GlobalAvgPool collapses spatial dims||Final feature extraction before the prediction head">
+            <span class="param-key">Conv2D ③</span><span class="param-val">128f · 3×3 · ReLU · BN · GAvgPool</span>
+          </div>
+          <div class="param-row"
+            data-tip="Dense layers||64→32 neurons with ReLU + 0.3 Dropout||Dropout prevents overfitting to training data">
+            <span class="param-key">Dense head</span><span class="param-val">Dense(64) → Drop(0.3) → Dense(32)</span>
+          </div>
+          <div class="param-row"
+            data-tip="Output layer||Single neuron, linear activation||Predicts the standardised 5-day forward return">
+            <span class="param-key">Output</span><span class="param-val">Dense(1, linear) — fwd return</span>
+          </div>
+          <div class="param-row"
+            data-tip="Total trainable parameters||~73,000 weights to learn||Deliberately small to avoid overfitting on ~2,700 samples">
+            <span class="param-key">Total params</span><span class="param-val">~73,000</span>
+          </div>
+        </div>
+        <div>
+          <div class="panel-label" style="margin-bottom:10px">TRAINING CONFIG</div>
+          <div class="param-row"
+            data-tip="Dataset||NIFTY 50 1-minute OHLC, Jan 2015 – Jan 2026||~1.02 million 1-minute bars, resampled to ~2,700 10-day windows">
+            <span class="param-key">Dataset</span><span class="param-val">NIFTY 50 1-min · 2015–2026</span>
+          </div>
+          <div class="param-row"
+            data-tip="Train/Val/Test split||Time-based — NO shuffling||Shuffling would cause data leakage; later data would train on earlier patterns">
+            <span class="param-key">Split</span><span class="param-val">70% / 15% / 15% — time-ordered</span>
+          </div>
+          <div class="param-row"
+            data-tip="Prediction target||5-day forward return as a percentage||e.g. +0.02 = market will be +2% in 5 trading days">
+            <span class="param-key">Target</span><span class="param-val">5-day forward return (%)</span>
+          </div>
+          <div class="param-row"
+            data-tip="Optimizer: Adam, lr=0.001||Adam adapts learning rate per parameter||Standard choice for CNN regression tasks">
+            <span class="param-key">Optimizer</span><span class="param-val">Adam · lr=1e-3</span>
+          </div>
+          <div class="param-row"
+            data-tip="STFT window: 60 minutes||Each spectrogram slice covers 1 trading hour||Longer window = better trend detection; shorter = better event detection">
+            <span class="param-key">STFT window</span><span class="param-val">60 min (1 trading hour)</span>
+          </div>
+          <div class="param-row"
+            data-tip="STFT hop: 15 minutes||Overlap between consecutive windows||75% overlap gives dense time resolution in the spectrogram">
+            <span class="param-key">STFT hop</span><span class="param-val">15 min · 16 freq bins</span>
+          </div>
+          <div class="param-row"
+            data-tip="Input window: 10 trading days||3,750 minutes of 1-min data per sample||Enough to capture weekly cycles and pre-election positioning">
+            <span class="param-key">Input window</span><span class="param-val">10 trading days (3,750 min)</span>
+          </div>
+          <div class="param-row"
+            data-tip="EarlyStopping patience=8||Training stops if val loss doesn't improve for 8 epochs||Best model checkpoint from epoch with lowest validation MSE">
+            <span class="param-key">Training</span><span class="param-val">Up to 50 epochs · patience=8 ·
+              batch=32</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div><!-- end main-wrap -->
+
+  <!-- ── FOOTER ─────────────────────────────────────────────── -->
+  <div id="footer">
+    <div id="footer-left">NSE - Nifty 50 Index Minute data (2015 to 2026)</div>
+    <div id="footer-center">ELECTION SZN &nbsp;|&nbsp; PATTERN RECOGNITION FOR FINANCIAL TIME SERIES &nbsp;|&nbsp;
+      ASSIGNMENT 2</div>
+    <div id="footer-right">DATA: NSE INDIA &nbsp;|&nbsp; MODEL: ElectionSZN_CNN v2 &nbsp;|&nbsp; R²=0.81</div>
+  </div>
+
+  <!-- ── CNN ARCH MODAL ───────────────────────────────────────── -->
+  <div class="modal-overlay" id="arch-modal">
+    <div class="modal-box" style="max-width:780px;width:95vw">
+      <button class="modal-close" id="arch-close">✕ CLOSE</button>
+      <div style="margin-bottom:16px">
+        <div style="font-size:13px;font-weight:700;letter-spacing:.1em;color:var(--text);margin-bottom:4px">CNN
+          ARCHITECTURE — ElectionSZN_CNN v2</div>
+        <div style="font-size:10px;color:var(--muted)">Convolutional Neural Network trained on STFT spectrograms of
+          Nifty 50 log-returns · Predicts 5-day forward return</div>
+      </div>
+      <!-- SVG Architecture Diagram -->
+      <svg viewBox="0 0 720 260" style="width:100%;border-radius:6px;background:#050508" role="img"
+        aria-label="CNN Architecture Diagram">
+        <!-- defs -->
+        <defs>
+          <marker id="arr" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+            <path d="M0,0 L6,3 L0,6 Z" fill="#444466" />
+          </marker>
+        </defs>
+        <!-- Background grid lines -->
+        <line x1="0" y1="130" x2="720" y2="130" stroke="#0d0d1a" stroke-width="1" />
+
+        <!-- INPUT -->
+        <rect x="10" y="70" width="72" height="120" rx="4" fill="#0a0a12" stroke="#00e5ff" stroke-width="1.5" />
+        <text x="46" y="92" text-anchor="middle" fill="#00e5ff" font-family="JetBrains Mono,monospace" font-size="8"
+          font-weight="700">INPUT</text>
+        <text x="46" y="108" text-anchor="middle" fill="#8888aa" font-family="JetBrains Mono,monospace" font-size="7">16
+          × 125</text>
+        <text x="46" y="121" text-anchor="middle" fill="#8888aa" font-family="JetBrains Mono,monospace" font-size="7">×
+          2 ch</text>
+        <text x="46" y="138" text-anchor="middle" fill="#444466" font-family="JetBrains Mono,monospace"
+          font-size="6.5">STFT power</text>
+        <text x="46" y="150" text-anchor="middle" fill="#444466" font-family="JetBrains Mono,monospace"
+          font-size="6.5">+ election</text>
+        <text x="46" y="162" text-anchor="middle" fill="#444466" font-family="JetBrains Mono,monospace"
+          font-size="6.5">mask</text>
+        <!-- arrow -->
+        <line x1="82" y1="130" x2="104" y2="130" stroke="#444466" stroke-width="1.2" marker-end="url(#arr)" />
+
+        <!-- CONV BLOCK 1 -->
+        <rect x="106" y="55" width="76" height="150" rx="4" fill="#0a0a12" stroke="#00e676" stroke-width="1.5" />
+        <text x="144" y="75" text-anchor="middle" fill="#00e676" font-family="JetBrains Mono,monospace" font-size="8"
+          font-weight="700">CONV ①</text>
+        <text x="144" y="91" text-anchor="middle" fill="#8888aa" font-family="JetBrains Mono,monospace" font-size="7">32
+          filters</text>
+        <text x="144" y="104" text-anchor="middle" fill="#8888aa" font-family="JetBrains Mono,monospace" font-size="7">3
+          × 3 kernel</text>
+        <rect x="118" y="112" width="52" height="14" rx="2" fill="#001a0a" />
+        <text x="144" y="122" text-anchor="middle" fill="#00e676" font-family="JetBrains Mono,monospace"
+          font-size="6.5">ReLU</text>
+        <rect x="118" y="129" width="52" height="14" rx="2" fill="#001a0a" />
+        <text x="144" y="139" text-anchor="middle" fill="#00e676" font-family="JetBrains Mono,monospace"
+          font-size="6.5">BatchNorm</text>
+        <rect x="118" y="146" width="52" height="14" rx="2" fill="#001a0a" />
+        <text x="144" y="156" text-anchor="middle" fill="#00e676" font-family="JetBrains Mono,monospace"
+          font-size="6.5">MaxPool 2×2</text>
+        <text x="144" y="180" text-anchor="middle" fill="#444466" font-family="JetBrains Mono,monospace"
+          font-size="6">out: 8×62×32</text>
+        <!-- arrow -->
+        <line x1="182" y1="130" x2="204" y2="130" stroke="#444466" stroke-width="1.2" marker-end="url(#arr)" />
+
+        <!-- CONV BLOCK 2 -->
+        <rect x="206" y="45" width="76" height="170" rx="4" fill="#0a0a12" stroke="#00e676" stroke-width="1.5" />
+        <text x="244" y="64" text-anchor="middle" fill="#00e676" font-family="JetBrains Mono,monospace" font-size="8"
+          font-weight="700">CONV ②</text>
+        <text x="244" y="80" text-anchor="middle" fill="#8888aa" font-family="JetBrains Mono,monospace" font-size="7">64
+          filters</text>
+        <text x="244" y="93" text-anchor="middle" fill="#8888aa" font-family="JetBrains Mono,monospace" font-size="7">3
+          × 3 kernel</text>
+        <rect x="218" y="101" width="52" height="14" rx="2" fill="#001a0a" />
+        <text x="244" y="111" text-anchor="middle" fill="#00e676" font-family="JetBrains Mono,monospace"
+          font-size="6.5">ReLU</text>
+        <rect x="218" y="118" width="52" height="14" rx="2" fill="#001a0a" />
+        <text x="244" y="128" text-anchor="middle" fill="#00e676" font-family="JetBrains Mono,monospace"
+          font-size="6.5">BatchNorm</text>
+        <rect x="218" y="135" width="52" height="14" rx="2" fill="#001a0a" />
+        <text x="244" y="145" text-anchor="middle" fill="#00e676" font-family="JetBrains Mono,monospace"
+          font-size="6.5">MaxPool 2×2</text>
+        <text x="244" y="192" text-anchor="middle" fill="#444466" font-family="JetBrains Mono,monospace"
+          font-size="6">out: 4×31×64</text>
+        <text x="244" y="201" text-anchor="middle" fill="#444466" font-family="JetBrains Mono,monospace"
+          font-size="6">2× receptive</text>
+        <!-- arrow -->
+        <line x1="282" y1="130" x2="304" y2="130" stroke="#444466" stroke-width="1.2" marker-end="url(#arr)" />
+
+        <!-- CONV BLOCK 3 -->
+        <rect x="306" y="35" width="82" height="190" rx="4" fill="#0a0a12" stroke="#00e676" stroke-width="1.5" />
+        <text x="347" y="54" text-anchor="middle" fill="#00e676" font-family="JetBrains Mono,monospace" font-size="8"
+          font-weight="700">CONV ③</text>
+        <text x="347" y="70" text-anchor="middle" fill="#8888aa" font-family="JetBrains Mono,monospace"
+          font-size="7">128 filters</text>
+        <text x="347" y="83" text-anchor="middle" fill="#8888aa" font-family="JetBrains Mono,monospace" font-size="7">3
+          × 3 kernel</text>
+        <rect x="318" y="91" width="58" height="14" rx="2" fill="#001a0a" />
+        <text x="347" y="101" text-anchor="middle" fill="#00e676" font-family="JetBrains Mono,monospace"
+          font-size="6.5">ReLU</text>
+        <rect x="318" y="108" width="58" height="14" rx="2" fill="#001a0a" />
+        <text x="347" y="118" text-anchor="middle" fill="#00e676" font-family="JetBrains Mono,monospace"
+          font-size="6.5">BatchNorm</text>
+        <rect x="318" y="125" width="58" height="14" rx="2" fill="#0a1a00" />
+        <text x="347" y="135" text-anchor="middle" fill="#ffb300" font-family="JetBrains Mono,monospace"
+          font-size="6.5">GlobalAvgPool</text>
+        <text x="347" y="205" text-anchor="middle" fill="#444466" font-family="JetBrains Mono,monospace"
+          font-size="6">out: 128-vec</text>
+        <text x="347" y="213" text-anchor="middle" fill="#444466" font-family="JetBrains Mono,monospace"
+          font-size="6">spatial → 1D</text>
+        <!-- arrow -->
+        <line x1="388" y1="130" x2="410" y2="130" stroke="#444466" stroke-width="1.2" marker-end="url(#arr)" />
+
+        <!-- DENSE HEAD -->
+        <rect x="412" y="65" width="76" height="130" rx="4" fill="#0a0a12" stroke="#ffb300" stroke-width="1.5" />
+        <text x="450" y="84" text-anchor="middle" fill="#ffb300" font-family="JetBrains Mono,monospace" font-size="8"
+          font-weight="700">DENSE</text>
+        <text x="450" y="100" text-anchor="middle" fill="#8888aa" font-family="JetBrains Mono,monospace"
+          font-size="7">FC 64 → ReLU</text>
+        <rect x="424" y="106" width="52" height="14" rx="2" fill="#1a1000" />
+        <text x="450" y="116" text-anchor="middle" fill="#ffb300" font-family="JetBrains Mono,monospace"
+          font-size="6.5">Dropout 0.3</text>
+        <text x="450" y="135" text-anchor="middle" fill="#8888aa" font-family="JetBrains Mono,monospace"
+          font-size="7">FC 32 → ReLU</text>
+        <text x="450" y="175" text-anchor="middle" fill="#444466" font-family="JetBrains Mono,monospace"
+          font-size="6">~73K params</text>
+        <!-- arrow -->
+        <line x1="488" y1="130" x2="510" y2="130" stroke="#444466" stroke-width="1.2" marker-end="url(#arr)" />
+
+        <!-- OUTPUT -->
+        <rect x="512" y="100" width="80" height="60" rx="4" fill="#0a0a12" stroke="#ff1744" stroke-width="1.5" />
+        <text x="552" y="119" text-anchor="middle" fill="#ff1744" font-family="JetBrains Mono,monospace" font-size="8"
+          font-weight="700">OUTPUT</text>
+        <text x="552" y="134" text-anchor="middle" fill="#8888aa" font-family="JetBrains Mono,monospace"
+          font-size="7">Dense(1)</text>
+        <text x="552" y="147" text-anchor="middle" fill="#8888aa" font-family="JetBrains Mono,monospace"
+          font-size="7">linear act.</text>
+        <!-- arrow -->
+        <line x1="592" y1="130" x2="614" y2="130" stroke="#444466" stroke-width="1.2" marker-end="url(#arr)" />
+
+        <!-- PREDICTION BOX -->
+        <rect x="616" y="90" width="94" height="80" rx="4" fill="#0a0a12" stroke="#00e5ff" stroke-width="1" />
+        <text x="663" y="110" text-anchor="middle" fill="#00e5ff" font-family="JetBrains Mono,monospace" font-size="8"
+          font-weight="700">PREDICTION</text>
+        <text x="663" y="126" text-anchor="middle" fill="#8888aa" font-family="JetBrains Mono,monospace"
+          font-size="7">5-day fwd</text>
+        <text x="663" y="139" text-anchor="middle" fill="#8888aa" font-family="JetBrains Mono,monospace"
+          font-size="7">return (%)</text>
+        <text x="663" y="157" text-anchor="middle" fill="#00e676" font-family="JetBrains Mono,monospace"
+          font-size="7">R²=0.81 ✓</text>
+
+        <!-- Phase label -->
+        <text x="360" y="248" text-anchor="middle" fill="#2a2a3e" font-family="JetBrains Mono,monospace"
+          font-size="8">Input: STFT spectrogram (16 freq × 125 time × 2 channels) → 5-day Nifty 50 return
+          regression</text>
+      </svg>
+
+      <!-- Stats row -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px;font-size:10px">
+        <div style="padding:10px;background:#050505;border-radius:4px;border:1px solid var(--border);text-align:center">
+          <div style="color:var(--dim);font-size:8px;letter-spacing:.1em;margin-bottom:4px">TOTAL PARAMS</div>
+          <div style="color:var(--cyan);font-weight:700">~73,000</div>
+        </div>
+        <div style="padding:10px;background:#050505;border-radius:4px;border:1px solid var(--border);text-align:center">
+          <div style="color:var(--dim);font-size:8px;letter-spacing:.1em;margin-bottom:4px">LOSS FN</div>
+          <div style="color:var(--cyan);font-weight:700">MSE</div>
+        </div>
+        <div style="padding:10px;background:#050505;border-radius:4px;border:1px solid var(--border);text-align:center">
+          <div style="color:var(--dim);font-size:8px;letter-spacing:.1em;margin-bottom:4px">OPTIMIZER</div>
+          <div style="color:var(--cyan);font-weight:700">Adam 1e-3</div>
+        </div>
+        <div style="padding:10px;background:#050505;border-radius:4px;border:1px solid var(--border);text-align:center">
+          <div style="color:var(--dim);font-size:8px;letter-spacing:.1em;margin-bottom:4px">TEST R²</div>
+          <div style="color:var(--green);font-weight:700">0.8081</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── DEEP SCAN MODAL ─────────────────────────────────────── -->
+  <div class="modal-overlay" id="deep-scan-modal">
+    <div class="modal-box">
+      <button class="modal-close" id="ds-close">✕ CLOSE</button>
+      <div style="margin-bottom:16px">
+        <div id="ds-title"
+          style="font-size:13px;font-weight:700;letter-spacing:.1em;color:var(--text);margin-bottom:4px"></div>
+        <div style="font-size:10px;color:var(--muted)">FFT amplitude spectrum — how much energy exists at each
+          frequency. Higher = more activity at that frequency band during this period.</div>
+      </div>
+      <div style="height:280px"><canvas id="ds-chart"></canvas></div>
+      <div style="margin-top:16px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;font-size:10px">
+        <div style="padding:10px;background:#050505;border-radius:4px;border:1px solid var(--border)">
+          <div style="color:var(--dim);margin-bottom:4px;font-size:9px;letter-spacing:.1em">LOW FREQ (TREND)</div>
+          <div style="color:var(--muted)">0–0.017 cycles/min. Daily & weekly cycles. High energy = sustained directional
+            move.</div>
+        </div>
+        <div style="padding:10px;background:#050505;border-radius:4px;border:1px solid var(--border)">
+          <div style="color:var(--dim);margin-bottom:4px;font-size:9px;letter-spacing:.1em">MID FREQ (INTRADAY)</div>
+          <div style="color:var(--muted)">0.017–0.25 cycles/min. Intraday cycles. High energy = institutions trading in
+            sessions.</div>
+        </div>
+        <div style="padding:10px;background:#050505;border-radius:4px;border:1px solid var(--border)">
+          <div style="color:var(--dim);margin-bottom:4px;font-size:9px;letter-spacing:.1em">HIGH FREQ (NOISE)</div>
+          <div style="color:var(--muted)">0.25–3 cycles/min. Minute-to-minute noise. High energy = chaos, panic, or
+            algos reacting.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SCRIPTS ─────────────────────────────────────────────── -->
+  <script src="js/gauge.js"></script>
+  <script src="js/heatmap.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+
+</html>
