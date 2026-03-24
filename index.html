@@ -13,6 +13,14 @@
 </head>
 
 <body>
+  <!-- ── ROTATE DEVICE OVERLAY ──────────────────────────────────────── -->
+  <div id="rotate-device"
+    style="display:none;position:fixed;inset:0;background:#050505;z-index:9999;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px">
+    <div style="font-size:42px;margin-bottom:12px;color:var(--cyan)">⟳</div>
+    <div style="font-size:16px;font-weight:700;letter-spacing:.1em;margin-bottom:8px">ROTATE TO LANDSCAPE</div>
+    <div style="font-size:11px;color:var(--muted);max-width:280px;line-height:1.4">This market intelligence dashboard
+      requires a wide screen to view the 3-column analysis and full spectral data.</div>
+  </div>
 
   <!-- ── TOOLTIP ──────────────────────────────────────────── -->
   <div id="tooltip"></div>
@@ -387,7 +395,9 @@
 
   <!-- ── FOOTER ─────────────────────────────────────────────── -->
   <div id="footer">
-    <div id="footer-left">NSE - Nifty 50 Index Minute data (2015 to 2026)</div>
+    <div id="footer-left"><a href="https://www.kaggle.com/datasets/debashis74017/nifty-50-minute-data" target="_blank"
+        style="color:inherit;text-decoration:none;border-bottom:1px solid rgba(255,23,68,0.4);transition:border-color 0.2s">NSE
+        - Nifty 50 Index Minute data (2015 to 2026)</a></div>
     <div id="footer-center">ELECTION SZN &nbsp;|&nbsp; PATTERN RECOGNITION FOR FINANCIAL TIME SERIES &nbsp;|&nbsp;
       ASSIGNMENT 2</div>
     <div id="footer-right">DATA: NSE INDIA &nbsp;|&nbsp; MODEL: ElectionSZN_CNN v2 &nbsp;|&nbsp; R²=0.81</div>
