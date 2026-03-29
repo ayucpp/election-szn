@@ -5,6 +5,7 @@
 A high-fidelity quantitative research project applying signal processing techniques to financial time-series data during Indian Lok Sabha elections (2019 & 2024).
 
 ### Team Members
+- Abhiram H — TCR24CS002
 - Ayush Raj — TCR24CS018
 - Jerome Parekkattil — TCR24CS037
 - Royce Pathayil Saji — TCR24CS058
